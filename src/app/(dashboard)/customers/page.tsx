@@ -12,7 +12,7 @@ import type { AdminUserSummary } from "@/types/user";
 import { UserStatusBadge } from "@/components/customers/StatusBadge";
 import CustomerDetail from "@/components/customers/CustomerDetail";
 import { DEMO_MODE } from "@/lib/demo";
-import { searchMockCustomers } from "@/lib/mockData";
+import { MOCK_CUSTOMERS, searchMockCustomers } from "@/lib/mockData";
 import PreviewNote from "@/components/ui/PreviewNote";
 
 export default function CustomersPage() {
@@ -25,6 +25,16 @@ export default function CustomersPage() {
 
   useEffect(() => {
     const trimmed = query.trim();
+
+    if (DEMO_MODE) {
+      // No 2-character minimum here — that's a real constraint on the
+      // live search endpoint (BadRequestError below it), not something
+      // worth reproducing when there's no backend to protect in a demo.
+      setResults(trimmed.length === 0 ? MOCK_CUSTOMERS : searchMockCustomers(trimmed));
+      setError(null);
+      return;
+    }
+
     if (trimmed.length < 2) {
       setResults([]);
       setError(null);
@@ -32,11 +42,6 @@ export default function CustomersPage() {
     }
 
     const handle = setTimeout(() => {
-      if (DEMO_MODE) {
-        setResults(searchMockCustomers(trimmed));
-        setError(null);
-        return;
-      }
       setLoading(true);
       api
         .get<AdminUserSummary[]>(`/admin/users?query=${encodeURIComponent(trimmed)}`)
@@ -57,7 +62,7 @@ export default function CustomersPage() {
 
       {DEMO_MODE && (
         <PreviewNote>
-          Running on sample customers for today&rsquo;s demo — try &ldquo;Amaka&rdquo;, &ldquo;Tunde&rdquo;, or &ldquo;Fatima&rdquo;.
+          Running on sample customers for today&rsquo;s demo — search narrows the list below.
         </PreviewNote>
       )}
 
@@ -72,7 +77,7 @@ export default function CustomersPage() {
       </div>
 
       <div className="mt-4">
-        {query.trim().length < 2 && (
+        {!DEMO_MODE && query.trim().length < 2 && (
           <p className="py-8 text-center text-sm text-text-light">
             Type at least 2 characters to search.
           </p>
@@ -84,7 +89,7 @@ export default function CustomersPage() {
           <p className="py-8 text-center text-sm text-text-light">Searching…</p>
         )}
 
-        {!loading && !error && query.trim().length >= 2 && results.length === 0 && (
+        {!loading && !error && (DEMO_MODE || query.trim().length >= 2) && results.length === 0 && (
           <p className="py-8 text-center text-sm text-text-light">No customers matched &ldquo;{query}&rdquo;.</p>
         )}
 

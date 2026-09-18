@@ -8,7 +8,8 @@ import type { AdminUserProfile } from "@/types/user";
 import { UserStatusBadge, IdentityStatusBadge } from "./StatusBadge";
 import Button from "@/components/ui/Button";
 import { DEMO_MODE } from "@/lib/demo";
-import { getMockCustomer, setMockCustomerStatus } from "@/lib/mockData";
+import { getMockCustomer, getMockBuckets, setMockCustomerStatus } from "@/lib/mockData";
+import CustomerBuckets from "./CustomerBuckets";
 
 export default function CustomerDetail({
   userId,
@@ -115,6 +116,17 @@ export default function CustomerDetail({
           <div className="flex items-center gap-3 text-sm">
             <ShieldCheck size={16} className="text-text-light" />
             <span className="text-text">Verified via {profile.identityMethod}</span>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <p className="mb-2.5 text-sm font-medium text-text">Buckets</p>
+        {DEMO_MODE ? (
+          <CustomerBuckets buckets={getMockBuckets(userId)} />
+        ) : (
+          <div className="rounded-2xl border border-dashed border-border p-4 text-center text-sm text-text-light">
+            Not wired up in the admin API yet
           </div>
         )}
       </div>

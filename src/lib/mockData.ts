@@ -1,5 +1,15 @@
 import type { AdminUserProfile } from "@/types/user";
 
+export interface MockBucket {
+  id: string;
+  name: string;
+  emoji: string;
+  tone: "green" | "red" | "orange" | "blue" | "purple" | "teal" | "pink";
+  protection: "FLEXIBLE" | "LOCKED";
+  targetAmountKobo: number | null;
+  currentAmountKobo: number;
+}
+
 // Sample customers for today's demo — deliberately varied so every status
 // badge and identity state actually shows up somewhere in the list.
 export const MOCK_CUSTOMERS: AdminUserProfile[] = [
@@ -82,6 +92,35 @@ export const MOCK_CUSTOMERS: AdminUserProfile[] = [
     walletActive: true,
   },
 ];
+
+// Keyed by customer id — mirrors the real Bucket model (name, color, target,
+// FLEXIBLE/LOCKED) closely enough to demo the concept. Two customers are
+// deliberately left with none: Chiamaka and Fatima both have no active
+// wallet yet, so no buckets is the honest state for them.
+export const MOCK_BUCKETS: Record<string, MockBucket[]> = {
+  "d1a1c2b0-0001-4a11-9d11-000000000001": [
+    { id: "b-1", name: "Rent", emoji: "🏠", tone: "orange", protection: "LOCKED", targetAmountKobo: 300_000_00, currentAmountKobo: 180_000_00 },
+    { id: "b-2", name: "Japa Fund", emoji: "✈️", tone: "blue", protection: "FLEXIBLE", targetAmountKobo: null, currentAmountKobo: 450_000_00 },
+    { id: "b-3", name: "Emergency", emoji: "🚨", tone: "teal", protection: "LOCKED", targetAmountKobo: 200_000_00, currentAmountKobo: 200_000_00 },
+  ],
+  "d1a1c2b0-0003-4a11-9d11-000000000003": [
+    { id: "b-4", name: "School Fees", emoji: "🎓", tone: "purple", protection: "LOCKED", targetAmountKobo: 150_000_00, currentAmountKobo: 90_000_00 },
+    { id: "b-5", name: "Data & Airtime", emoji: "📶", tone: "pink", protection: "FLEXIBLE", targetAmountKobo: null, currentAmountKobo: 5_000_00 },
+  ],
+  "d1a1c2b0-0005-4a11-9d11-000000000005": [
+    { id: "b-6", name: "Wedding", emoji: "💍", tone: "red", protection: "LOCKED", targetAmountKobo: 1_000_000_00, currentAmountKobo: 620_000_00 },
+    { id: "b-7", name: "New Laptop", emoji: "💻", tone: "orange", protection: "FLEXIBLE", targetAmountKobo: 350_000_00, currentAmountKobo: 350_000_00 },
+    { id: "b-8", name: "Business Capital", emoji: "📈", tone: "teal", protection: "FLEXIBLE", targetAmountKobo: null, currentAmountKobo: 275_000_00 },
+  ],
+  "d1a1c2b0-0006-4a11-9d11-000000000006": [
+    { id: "b-9", name: "Christmas", emoji: "🎄", tone: "pink", protection: "LOCKED", targetAmountKobo: 100_000_00, currentAmountKobo: 40_000_00 },
+    { id: "b-10", name: "Vacation", emoji: "🏖️", tone: "blue", protection: "FLEXIBLE", targetAmountKobo: 500_000_00, currentAmountKobo: 120_000_00 },
+  ],
+};
+
+export function getMockBuckets(customerId: string): MockBucket[] {
+  return MOCK_BUCKETS[customerId] ?? [];
+}
 
 export function searchMockCustomers(query: string): AdminUserProfile[] {
   const q = query.trim().toLowerCase();
