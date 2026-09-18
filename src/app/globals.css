@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Brand tokens — pulled directly from the consumer app
+   (smartbucket-app/lib/app/themes/sb_colors.dart) and the marketing site's
+   globals.css, so the admin panel reads as the same product, not a reskin. */
+@theme {
+  --color-bg: #f8faf8;
+  --color-surface: #ffffff;
+  --color-border: #dedede;
+
+  --color-text: #2e2e2e;
+  --color-text-secondary: #65697b;
+  --color-text-light: #a5a4a4;
+
+  --color-primary: #175530;
+  --color-primary-dark: #012e18;
+  --color-primary-bright: #1a8a45;
+
+  --color-accent-orange: #eb6500;
+  --color-accent-red: #e21e1f;
+  --color-accent-blue: #6aa3fe;
+  --color-accent-purple: #693cc0;
+  --color-accent-teal: #62c3cd;
+  --color-accent-pink: #e893c0;
+
+  --color-tint-green: #e4f7ef;
+  --color-tint-orange: #fcefe3;
+  --color-tint-red: #feeeed;
+  --color-tint-purple: #eae1fb;
+  --color-tint-yellow: #fcf3d9;
+  --color-tint-blue: #e9f1fe;
+  --color-tint-teal: #e4f6f7;
+  --color-tint-pink: #fbe9f2;
+
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+::selection {
+  background: var(--color-primary-bright);
+  color: #fff;
+}
