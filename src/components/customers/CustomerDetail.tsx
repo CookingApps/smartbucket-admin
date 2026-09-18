@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ShieldCheck, Mail, Phone, Wallet } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatNaira } from "@/lib/format";
 import type { AdminUserProfile, UserStatus } from "@/types/user";
 import type { LedgerEntry, StatusEvent, IdentityAuditEntry } from "@/types/admin";
 import { UserStatusBadge, IdentityStatusBadge } from "./StatusBadge";
@@ -137,6 +137,9 @@ export default function CustomerDetail({
     );
   }
 
+  const buckets = DEMO_MODE ? getMockBuckets(userId) : [];
+  const totalInBucketsKobo = buckets.reduce((sum, b) => sum + b.currentAmountKobo, 0);
+
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -149,6 +152,14 @@ export default function CustomerDetail({
           <IdentityStatusBadge status={profile.identityStatus} />
         </div>
       </div>
+
+      {DEMO_MODE && (
+        <div className="rounded-3xl bg-primary-dark p-4">
+          <p className="text-xs text-tint-green">Total across all buckets</p>
+          <p className="mt-1 text-2xl font-medium text-white">{formatNaira(totalInBucketsKobo)}</p>
+          <p className="mt-1 text-xs text-tint-green">{buckets.length} bucket{buckets.length === 1 ? "" : "s"}</p>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3 rounded-2xl border border-border p-4">
         <div className="flex items-center gap-3 text-sm">

@@ -39,7 +39,9 @@ export default function CustomersPage() {
       // No 2-character minimum here — that's a real constraint on the
       // live search endpoint (BadRequestError below it), not something
       // worth reproducing when there's no backend to protect in a demo.
-      setResults(trimmed.length === 0 ? MOCK_CUSTOMERS : searchMockCustomers(trimmed));
+      setResults(
+        trimmed.length === 0 ? MOCK_CUSTOMERS : searchMockCustomers(trimmed),
+      );
       setError(null);
       return;
     }
@@ -53,12 +55,16 @@ export default function CustomersPage() {
     const handle = setTimeout(() => {
       setLoading(true);
       api
-        .get<AdminUserSummary[]>(`/admin/users?query=${encodeURIComponent(trimmed)}`)
+        .get<AdminUserSummary[]>(
+          `/admin/users?query=${encodeURIComponent(trimmed)}`,
+        )
         .then((users) => {
           setResults(users);
           setError(null);
         })
-        .catch((err) => setError(err instanceof ApiError ? err.message : "Search failed."))
+        .catch((err) =>
+          setError(err instanceof ApiError ? err.message : "Search failed."),
+        )
         .finally(() => setLoading(false));
     }, 350);
 
@@ -67,16 +73,16 @@ export default function CustomersPage() {
 
   return (
     <div>
-      <PageHeader title="Customers" subtitle="Search for any customer to see their full profile." />
-
-      {DEMO_MODE && (
-        <PreviewNote>
-          Running on sample customers for today&rsquo;s demo — search narrows the list below.
-        </PreviewNote>
-      )}
+      <PageHeader
+        title="Customers"
+        subtitle="Search for any customer to see their full profile."
+      />
 
       <div className="relative">
-        <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-light" />
+        <Search
+          size={18}
+          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-light"
+        />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -98,9 +104,14 @@ export default function CustomersPage() {
           <p className="py-8 text-center text-sm text-text-light">Searching…</p>
         )}
 
-        {!loading && !error && (DEMO_MODE || query.trim().length >= 2) && results.length === 0 && (
-          <p className="py-8 text-center text-sm text-text-light">No customers matched &ldquo;{query}&rdquo;.</p>
-        )}
+        {!loading &&
+          !error &&
+          (DEMO_MODE || query.trim().length >= 2) &&
+          results.length === 0 && (
+            <p className="py-8 text-center text-sm text-text-light">
+              No customers matched &ldquo;{query}&rdquo;.
+            </p>
+          )}
 
         {results.length > 0 && (
           <Card className="divide-y divide-border p-0">
@@ -115,11 +126,15 @@ export default function CustomersPage() {
                   <p className="truncate text-sm font-medium text-text">
                     {user.firstName} {user.lastName}
                   </p>
-                  <p className="truncate text-xs text-text-secondary">{user.email}</p>
+                  <p className="truncate text-xs text-text-secondary">
+                    {user.email}
+                  </p>
                 </div>
                 <div className="flex flex-shrink-0 flex-col items-end gap-1.5">
                   <UserStatusBadge status={user.status} />
-                  <span className="text-xs text-text-light">{formatDate(user.createdAt)}</span>
+                  <span className="text-xs text-text-light">
+                    {formatDate(user.createdAt)}
+                  </span>
                 </div>
               </button>
             ))}
@@ -127,9 +142,16 @@ export default function CustomersPage() {
         )}
       </div>
 
-      <Sheet open={selectedId !== null} onClose={() => setSelectedId(null)} title="Customer">
+      <Sheet
+        open={selectedId !== null}
+        onClose={() => setSelectedId(null)}
+        title="Customer"
+      >
         {selectedId && (
-          <CustomerDetail userId={selectedId} onStatusChanged={() => setRefreshTick((t) => t + 1)} />
+          <CustomerDetail
+            userId={selectedId}
+            onStatusChanged={() => setRefreshTick((t) => t + 1)}
+          />
         )}
       </Sheet>
     </div>

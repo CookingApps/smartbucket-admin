@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { Users, ShieldCheck, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import {
+  Users,
+  ShieldCheck,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+} from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PreviewNote from "@/components/ui/PreviewNote";
 import StatCard from "@/components/ui/StatCard";
@@ -22,22 +27,41 @@ const STATS = {
 // ids match MOCK_CUSTOMERS in lib/mockData.ts, so "Review" actually opens
 // that customer's real profile instead of being a dead label.
 const NEEDS_ATTENTION = [
-  { id: "d1a1c2b0-0002-4a11-9d11-000000000002", name: "Chiamaka Obi", reason: "Name mismatch on NIN check", time: "2h ago" },
-  { id: "d1a1c2b0-0003-4a11-9d11-000000000003", name: "Tunde Bakare", reason: "3 failed BVN attempts — locked", time: "5h ago" },
-  { id: "d1a1c2b0-0004-4a11-9d11-000000000004", name: "Fatima Sule", reason: "Duplicate BVN flagged", time: "1d ago" },
+  {
+    id: "d1a1c2b0-0002-4a11-9d11-000000000002",
+    name: "Chiamaka Obi",
+    reason: "Name mismatch on NIN check",
+    time: "2h ago",
+  },
+  {
+    id: "d1a1c2b0-0003-4a11-9d11-000000000003",
+    name: "Tunde Bakare",
+    reason: "3 failed BVN attempts — locked",
+    time: "5h ago",
+  },
+  {
+    id: "d1a1c2b0-0004-4a11-9d11-000000000004",
+    name: "Fatima Sule",
+    reason: "Duplicate BVN flagged",
+    time: "1d ago",
+  },
 ];
 
 export default function OverviewPage() {
   return (
     <div>
-      <PageHeader title="Overview" subtitle="A snapshot of the whole business at a glance." />
-      <PreviewNote>
-        Showing sample numbers — this page will switch to live data once the stats endpoint is built.
-      </PreviewNote>
+      <PageHeader
+        title="Overview"
+        subtitle="A snapshot of the whole business at a glance."
+      />
 
       <Card className="bg-primary-dark p-6">
-        <p className="text-sm text-tint-green">Total money in customer buckets</p>
-        <p className="mt-2 text-3xl font-medium text-white">{formatNaira(STATS.totalInBuckets)}</p>
+        <p className="text-sm text-tint-green">
+          Total money in customer buckets
+        </p>
+        <p className="mt-2 text-3xl font-medium text-white">
+          {formatNaira(STATS.totalInBuckets)}
+        </p>
         <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white">
           {STATS.totalCustomers} customers · {STATS.verifiedCustomers} verified
         </div>
@@ -85,7 +109,9 @@ export default function OverviewPage() {
       </div>
 
       <div className="mt-6">
-        <h2 className="mb-3 text-base font-medium text-text">Needs attention</h2>
+        <h2 className="mb-3 text-base font-medium text-text">
+          Needs attention
+        </h2>
         <Card className="divide-y divide-border p-0">
           {NEEDS_ATTENTION.map((item) => (
             <Link
