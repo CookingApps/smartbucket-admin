@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
@@ -16,12 +17,20 @@ import { MOCK_CUSTOMERS, searchMockCustomers } from "@/lib/mockData";
 import PreviewNote from "@/components/ui/PreviewNote";
 
 export default function CustomersPage() {
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AdminUserSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
+
+  // Landed here from Overview's "Needs attention" list — open that
+  // customer's profile straight away instead of making them search for it.
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (openId) setSelectedId(openId);
+  }, [searchParams]);
 
   useEffect(() => {
     const trimmed = query.trim();

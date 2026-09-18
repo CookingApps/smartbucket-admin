@@ -1,4 +1,5 @@
 import type { AdminUserProfile } from "@/types/user";
+import type { LedgerEntry, StatusEvent, IdentityAuditEntry } from "@/types/admin";
 
 export interface MockBucket {
   id: string;
@@ -122,6 +123,98 @@ export function getMockBuckets(customerId: string): MockBucket[] {
   return MOCK_BUCKETS[customerId] ?? [];
 }
 
+// Mirrors GET /admin/users/:id/ledger — same shape AnalyticsService.history()
+// returns (id, type, signed amount, gross, createdAt), no description field
+// on the real thing, so the UI derives its label from `type`.
+export const MOCK_LEDGER: Record<string, LedgerEntry[]> = {
+  "d1a1c2b0-0001-4a11-9d11-000000000001": [
+    { id: "l-1", type: "DEPOSIT", amount: 200_000_00, gross: 200_000_00, createdAt: "2026-08-15T10:12:00.000Z" },
+    { id: "l-2", type: "ALLOCATION", amount: -30_000_00, gross: 0, createdAt: "2026-09-10T09:00:00.000Z" },
+    { id: "l-3", type: "DEPOSIT", amount: 50_000_00, gross: 50_000_00, createdAt: "2026-09-10T09:05:00.000Z" },
+  ],
+  "d1a1c2b0-0003-4a11-9d11-000000000003": [
+    { id: "l-4", type: "DEPOSIT", amount: 100_000_00, gross: 100_000_00, createdAt: "2026-04-28T13:20:00.000Z" },
+    { id: "l-5", type: "ALLOCATION", amount: -90_000_00, gross: 0, createdAt: "2026-04-29T08:15:00.000Z" },
+    { id: "l-6", type: "EXTERNAL_TRANSFER", amount: -5_000_00, gross: 0, createdAt: "2026-05-01T17:40:00.000Z" },
+  ],
+  "d1a1c2b0-0005-4a11-9d11-000000000005": [
+    { id: "l-7", type: "DEPOSIT", amount: 700_000_00, gross: 700_000_00, createdAt: "2026-07-22T09:00:00.000Z" },
+    { id: "l-8", type: "ALLOCATION", amount: -350_000_00, gross: 0, createdAt: "2026-07-23T11:30:00.000Z" },
+    { id: "l-9", type: "ALLOCATION", amount: -300_000_00, gross: 0, createdAt: "2026-08-05T14:10:00.000Z" },
+    { id: "l-10", type: "EXTERNAL_TRANSFER", amount: -50_000_00, gross: 0, createdAt: "2026-08-20T16:00:00.000Z" },
+  ],
+  "d1a1c2b0-0006-4a11-9d11-000000000006": [
+    { id: "l-11", type: "DEPOSIT", amount: 160_000_00, gross: 160_000_00, createdAt: "2026-09-01T12:30:00.000Z" },
+    { id: "l-12", type: "ALLOCATION", amount: -40_000_00, gross: 0, createdAt: "2026-09-02T08:00:00.000Z" },
+    { id: "l-13", type: "ALLOCATION", amount: -120_000_00, gross: 0, createdAt: "2026-09-02T08:01:00.000Z" },
+  ],
+};
+
+export function getMockLedger(customerId: string): LedgerEntry[] {
+  return MOCK_LEDGER[customerId] ?? [];
+}
+
+// Mirrors model UserStatusEvent / GET /admin/users/:id/status-events —
+// append-only, so actions taken during the demo get pushed onto this
+// instead of replacing anything.
+export const MOCK_STATUS_EVENTS: Record<string, StatusEvent[]> = {
+  "d1a1c2b0-0003-4a11-9d11-000000000003": [
+    { id: "s-1", fromStatus: "ACTIVE", toStatus: "RESTRICTED", reason: "3 failed BVN verification attempts", actor: "system", createdAt: "2026-09-18T07:15:00.000Z" },
+  ],
+  "d1a1c2b0-0004-4a11-9d11-000000000004": [
+    { id: "s-2", fromStatus: "ACTIVE", toStatus: "SUSPENDED", reason: "Duplicate BVN linked to another verified account", actor: "compliance@smartbucket.co", createdAt: "2026-09-17T12:00:00.000Z" },
+  ],
+};
+
+export function getMockStatusEvents(customerId: string): StatusEvent[] {
+  return MOCK_STATUS_EVENTS[customerId] ?? [];
+}
+
+function pushMockStatusEvent(
+  customerId: string,
+  fromStatus: AdminUserProfile["status"],
+  toStatus: AdminUserProfile["status"],
+  reason: string,
+): void {
+  const list = MOCK_STATUS_EVENTS[customerId] ?? (MOCK_STATUS_EVENTS[customerId] = []);
+  list.unshift({
+    id: `s-${Date.now()}`,
+    fromStatus,
+    toStatus,
+    reason,
+    actor: "you (demo)",
+    createdAt: new Date().toISOString(),
+  });
+}
+
+// Mirrors model IdentityAuditLog / GET /admin/users/:id/identity-audit.
+export const MOCK_IDENTITY_AUDIT: Record<string, IdentityAuditEntry[]> = {
+  "d1a1c2b0-0001-4a11-9d11-000000000001": [
+    { id: "i-1", action: "INITIAL_VERIFY", outcome: "SUCCESS", previousMethod: null, newMethod: "BVN", submitted: "BVN", detail: "Matched registry name and DOB", createdAt: "2026-06-12T09:10:00.000Z" },
+  ],
+  "d1a1c2b0-0002-4a11-9d11-000000000002": [
+    { id: "i-2", action: "INITIAL_VERIFY", outcome: "CROSS_CHECK_FAILED", previousMethod: null, newMethod: null, submitted: "NIN", detail: "Name on NIN doesn't closely match registration name", createdAt: "2026-09-18T10:30:00.000Z" },
+  ],
+  "d1a1c2b0-0003-4a11-9d11-000000000003": [
+    { id: "i-3", action: "INITIAL_VERIFY", outcome: "PROVIDER_REJECTED", previousMethod: null, newMethod: null, submitted: "BVN", detail: "Registry lookup failed — no match", createdAt: "2026-09-18T07:00:00.000Z" },
+    { id: "i-4", action: "INITIAL_VERIFY", outcome: "PROVIDER_REJECTED", previousMethod: null, newMethod: null, submitted: "BVN", detail: "Registry lookup failed — no match", createdAt: "2026-09-18T07:05:00.000Z" },
+    { id: "i-5", action: "INITIAL_VERIFY", outcome: "PROVIDER_REJECTED", previousMethod: null, newMethod: null, submitted: "BVN", detail: "Registry lookup failed — no match, account locked", createdAt: "2026-09-18T07:15:00.000Z" },
+  ],
+  "d1a1c2b0-0004-4a11-9d11-000000000004": [
+    { id: "i-6", action: "INITIAL_VERIFY", outcome: "DUPLICATE", previousMethod: null, newMethod: null, submitted: "BVN", detail: "BVN already linked to another verified account", createdAt: "2026-09-17T11:55:00.000Z" },
+  ],
+  "d1a1c2b0-0005-4a11-9d11-000000000005": [
+    { id: "i-7", action: "INITIAL_VERIFY", outcome: "SUCCESS", previousMethod: null, newMethod: "NIN", submitted: "NIN", detail: "Matched registry name and DOB", createdAt: "2026-07-21T16:40:00.000Z" },
+  ],
+  "d1a1c2b0-0006-4a11-9d11-000000000006": [
+    { id: "i-8", action: "INITIAL_VERIFY", outcome: "SUCCESS", previousMethod: null, newMethod: "BVN", submitted: "BVN", detail: "Matched registry name and DOB", createdAt: "2026-09-01T12:05:00.000Z" },
+  ],
+};
+
+export function getMockIdentityAudit(customerId: string): IdentityAuditEntry[] {
+  return MOCK_IDENTITY_AUDIT[customerId] ?? [];
+}
+
 export function searchMockCustomers(query: string): AdminUserProfile[] {
   const q = query.trim().toLowerCase();
   if (q.length < 2) return [];
@@ -138,7 +231,10 @@ export function getMockCustomer(id: string): AdminUserProfile | undefined {
   return MOCK_CUSTOMERS.find((c) => c.id === id);
 }
 
-export function setMockCustomerStatus(id: string, status: AdminUserProfile["status"]): void {
+export function setMockCustomerStatus(id: string, status: AdminUserProfile["status"], reason: string): void {
   const customer = MOCK_CUSTOMERS.find((c) => c.id === id);
-  if (customer) customer.status = status;
+  if (!customer) return;
+  const fromStatus = customer.status;
+  customer.status = status;
+  pushMockStatusEvent(id, fromStatus, status, reason);
 }

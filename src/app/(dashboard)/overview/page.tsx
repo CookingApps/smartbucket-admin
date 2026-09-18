@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Users, ShieldCheck, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import PreviewNote from "@/components/ui/PreviewNote";
@@ -18,10 +19,12 @@ const STATS = {
   awaitingReview: 7,
 };
 
+// ids match MOCK_CUSTOMERS in lib/mockData.ts, so "Review" actually opens
+// that customer's real profile instead of being a dead label.
 const NEEDS_ATTENTION = [
-  { name: "Chiamaka Obi", reason: "Name mismatch on NIN check", time: "2h ago" },
-  { name: "Tunde Bakare", reason: "3 failed BVN attempts — locked", time: "5h ago" },
-  { name: "Fatima Sule", reason: "Duplicate BVN flagged", time: "1d ago" },
+  { id: "d1a1c2b0-0002-4a11-9d11-000000000002", name: "Chiamaka Obi", reason: "Name mismatch on NIN check", time: "2h ago" },
+  { id: "d1a1c2b0-0003-4a11-9d11-000000000003", name: "Tunde Bakare", reason: "3 failed BVN attempts — locked", time: "5h ago" },
+  { id: "d1a1c2b0-0004-4a11-9d11-000000000004", name: "Fatima Sule", reason: "Duplicate BVN flagged", time: "1d ago" },
 ];
 
 export default function OverviewPage() {
@@ -85,7 +88,11 @@ export default function OverviewPage() {
         <h2 className="mb-3 text-base font-medium text-text">Needs attention</h2>
         <Card className="divide-y divide-border p-0">
           {NEEDS_ATTENTION.map((item) => (
-            <div key={item.name} className="flex items-center justify-between gap-4 px-5 py-4">
+            <Link
+              key={item.id}
+              href={`/customers?open=${item.id}`}
+              className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-bg"
+            >
               <div>
                 <p className="text-sm font-medium text-text">{item.name}</p>
                 <p className="text-sm text-text-secondary">{item.reason}</p>
@@ -94,7 +101,7 @@ export default function OverviewPage() {
                 <span className="text-xs text-text-light">{item.time}</span>
                 <Badge tone="purple">Review</Badge>
               </div>
-            </div>
+            </Link>
           ))}
         </Card>
       </div>

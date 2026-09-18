@@ -3,7 +3,7 @@
 import { type ButtonHTMLAttributes, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary" | "outline" | "text" | "danger";
+type Variant = "primary" | "secondary" | "outline" | "text" | "danger" | "warning";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -20,6 +20,7 @@ const VARIANT_CLASSES: Record<Variant, string> = {
   outline: "bg-transparent text-primary border-2 border-primary hover:bg-tint-green disabled:border-text-light disabled:text-text-light",
   text: "bg-transparent text-primary hover:bg-tint-green disabled:text-text-light",
   danger: "bg-accent-red text-white hover:bg-accent-red/90 disabled:bg-text-light",
+  warning: "bg-tint-orange text-accent-orange hover:bg-tint-orange/70 disabled:text-text-light",
 };
 
 export default function Button({
