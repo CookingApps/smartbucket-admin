@@ -11,6 +11,9 @@ import { formatDate } from "@/lib/format";
 import type { AdminUserSummary } from "@/types/user";
 import { UserStatusBadge } from "@/components/customers/StatusBadge";
 import CustomerDetail from "@/components/customers/CustomerDetail";
+import { DEMO_MODE } from "@/lib/demo";
+import { searchMockCustomers } from "@/lib/mockData";
+import PreviewNote from "@/components/ui/PreviewNote";
 
 export default function CustomersPage() {
   const [query, setQuery] = useState("");
@@ -29,6 +32,11 @@ export default function CustomersPage() {
     }
 
     const handle = setTimeout(() => {
+      if (DEMO_MODE) {
+        setResults(searchMockCustomers(trimmed));
+        setError(null);
+        return;
+      }
       setLoading(true);
       api
         .get<AdminUserSummary[]>(`/admin/users?query=${encodeURIComponent(trimmed)}`)
@@ -46,6 +54,12 @@ export default function CustomersPage() {
   return (
     <div>
       <PageHeader title="Customers" subtitle="Search for any customer to see their full profile." />
+
+      {DEMO_MODE && (
+        <PreviewNote>
+          Running on sample customers for today&rsquo;s demo — try &ldquo;Amaka&rdquo;, &ldquo;Tunde&rdquo;, or &ldquo;Fatima&rdquo;.
+        </PreviewNote>
+      )}
 
       <div className="relative">
         <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-light" />

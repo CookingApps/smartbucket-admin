@@ -7,6 +7,8 @@ import { formatDate } from "@/lib/format";
 import type { AdminUserProfile } from "@/types/user";
 import { UserStatusBadge, IdentityStatusBadge } from "./StatusBadge";
 import Button from "@/components/ui/Button";
+import { DEMO_MODE } from "@/lib/demo";
+import { getMockCustomer, setMockCustomerStatus } from "@/lib/mockData";
 
 export default function CustomerDetail({
   userId,
@@ -24,6 +26,14 @@ export default function CustomerDetail({
     setProfile(null);
     setError(null);
     setReason("");
+
+    if (DEMO_MODE) {
+      const mock = getMockCustomer(userId);
+      if (mock) setProfile(mock);
+      else setError("Couldn't load this customer.");
+      return;
+    }
+
     api
       .get<AdminUserProfile>(`/admin/users/${userId}`)
       .then(setProfile)
@@ -37,8 +47,17 @@ export default function CustomerDetail({
       setError("Add a short reason (at least 3 characters) before saving.");
       return;
     }
-    setSaving(true);
     setError(null);
+
+    if (DEMO_MODE) {
+      setMockCustomerStatus(userId, nextStatus);
+      setProfile({ ...profile, status: nextStatus });
+      setReason("");
+      onStatusChanged();
+      return;
+    }
+
+    setSaving(true);
     try {
       await api.patch(`/admin/users/${userId}/status`, { status: nextStatus, reason });
       setProfile({ ...profile, status: nextStatus });
