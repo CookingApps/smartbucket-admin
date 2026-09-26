@@ -395,9 +395,9 @@ export const MOCK_FLAGGED_TRANSACTIONS: FlaggedTransaction[] = [
   {
     id: "f-3",
     customerId: "d1a1c2b0-0003-4a11-9d11-000000000003",
-    reason: "Transfer sent minutes after account was auto-restricted",
+    reason: "Flagged for retroactive review after the account was later restricted for failed identity checks",
     amountKobo: 5_000_00,
-    severity: "high",
+    severity: "medium",
     createdAt: "2026-05-01T17:40:00.000Z",
   },
 ];
