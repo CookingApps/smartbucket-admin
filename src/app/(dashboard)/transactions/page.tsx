@@ -6,7 +6,6 @@ import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
 import Sheet from "@/components/ui/Sheet";
-import PreviewNote from "@/components/ui/PreviewNote";
 import VolumeByTypeChart from "@/components/charts/VolumeByTypeChart";
 import CustomerDetail from "@/components/customers/CustomerDetail";
 import { LEDGER_TYPE_LABEL } from "@/lib/ledgerLabels";
@@ -49,12 +48,6 @@ export default function TransactionsPage() {
         title="Transactions"
         subtitle="Every deposit, allocation, and withdrawal across every customer, in one place."
       />
-
-      <PreviewNote>
-        Running on sample transactions for today&rsquo;s demo — there&rsquo;s no
-        all-customers ledger endpoint on the backend yet, only the per-customer one
-        Customers already uses.
-      </PreviewNote>
 
       <Card className="p-5">
         <h2 className="mb-4 text-sm font-medium text-text">Volume by transaction type</h2>
