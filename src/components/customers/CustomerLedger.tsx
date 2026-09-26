@@ -1,17 +1,7 @@
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { formatNaira, formatDateTime } from "@/lib/format";
-import type { LedgerEntry, LedgerTransactionType } from "@/types/admin";
-
-const TYPE_LABEL: Record<LedgerTransactionType, string> = {
-  DEPOSIT: "Deposit",
-  ALLOCATION: "Moved to a bucket",
-  MANUAL_ALLOCATION: "Manually moved to a bucket",
-  BUCKET_TRANSFER: "Moved between buckets",
-  EXTERNAL_TRANSFER: "Sent to bank",
-  TRANSFER_REVERSAL: "Transfer reversed",
-  PENALTY: "Early-break penalty",
-  FEE: "Fee",
-};
+import { LEDGER_TYPE_LABEL } from "@/lib/ledgerLabels";
+import type { LedgerEntry } from "@/types/admin";
 
 export default function CustomerLedger({ entries }: { entries: LedgerEntry[] }) {
   if (entries.length === 0) {
@@ -40,7 +30,7 @@ export default function CustomerLedger({ entries }: { entries: LedgerEntry[] }) 
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-text">{TYPE_LABEL[entry.type]}</p>
+              <p className="text-sm text-text">{LEDGER_TYPE_LABEL[entry.type]}</p>
               <p className="text-xs text-text-light">{formatDateTime(entry.createdAt)}</p>
             </div>
             <span className={`flex-shrink-0 text-sm font-medium ${isCredit ? "text-primary" : "text-text"}`}>
