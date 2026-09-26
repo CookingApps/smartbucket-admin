@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { FileBarChart2, ShieldAlert } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
-import PreviewNote from "@/components/ui/PreviewNote";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -56,12 +55,6 @@ export default function RiskPage() {
         title="Risk & Compliance"
         subtitle="The controls expected of any Nigerian fintech handling real money."
       />
-
-      <PreviewNote>
-        Running on sample data for today&rsquo;s demo — limits, flags, and the report below
-        aren&rsquo;t backed by real endpoints yet. The layout and the actions are final; only
-        the numbers behind them are illustrative.
-      </PreviewNote>
 
       <Card className="p-5">
         <h2 className="text-sm font-medium text-text">Daily transfer limit</h2>
