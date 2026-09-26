@@ -123,6 +123,15 @@ export function getMockBuckets(customerId: string): MockBucket[] {
   return MOCK_BUCKETS[customerId] ?? [];
 }
 
+// Real sum of every bucket above — kept computed rather than a separate
+// hardcoded number, so Overview's hero figure can never drift out of sync
+// with what Customers actually shows for each person.
+export function getTotalMockBucketBalance(): number {
+  return Object.values(MOCK_BUCKETS)
+    .flat()
+    .reduce((sum, b) => sum + b.currentAmountKobo, 0);
+}
+
 // Mirrors GET /admin/users/:id/ledger — same shape AnalyticsService.history()
 // returns (id, type, signed amount, gross, createdAt), no description field
 // on the real thing, so the UI derives its label from `type`.
@@ -238,3 +247,173 @@ export function setMockCustomerStatus(id: string, status: AdminUserProfile["stat
   customer.status = status;
   pushMockStatusEvent(id, fromStatus, status, reason);
 }
+
+// ---- Transactions (all customers) ----
+
+export interface GlobalLedgerEntry extends LedgerEntry {
+  customerId: string;
+}
+
+// Flattens MOCK_LEDGER across every customer, newest first — this is the
+// "Transactions" page's whole dataset: the same rows already visible one
+// customer at a time on Customers, just merged into one feed.
+export function getAllMockLedgerEntries(): GlobalLedgerEntry[] {
+  const all: GlobalLedgerEntry[] = [];
+  for (const [customerId, entries] of Object.entries(MOCK_LEDGER)) {
+    for (const entry of entries) all.push({ ...entry, customerId });
+  }
+  return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export interface DailyFlow {
+  date: string; // yyyy-mm-dd
+  depositsKobo: number;
+  withdrawalsKobo: number;
+}
+
+// Independent sample series for the Overview trend chart — the individual
+// ledger rows above are deliberately sparse (a handful of illustrative
+// transactions spread across months, for the per-customer lists), so they
+// don't have the daily density a 14-day chart needs. Same convention
+// Overview's STATS block already uses for exactly this reason.
+export const MOCK_DAILY_FLOW: DailyFlow[] = [
+  { date: "2026-09-13", depositsKobo: 120_000_00, withdrawalsKobo: 40_000_00 },
+  { date: "2026-09-14", depositsKobo: 80_000_00, withdrawalsKobo: 30_000_00 },
+  { date: "2026-09-15", depositsKobo: 60_000_00, withdrawalsKobo: 90_000_00 },
+  { date: "2026-09-16", depositsKobo: 150_000_00, withdrawalsKobo: 50_000_00 },
+  { date: "2026-09-17", depositsKobo: 90_000_00, withdrawalsKobo: 20_000_00 },
+  { date: "2026-09-18", depositsKobo: 200_000_00, withdrawalsKobo: 60_000_00 },
+  { date: "2026-09-19", depositsKobo: 70_000_00, withdrawalsKobo: 45_000_00 },
+  { date: "2026-09-20", depositsKobo: 40_000_00, withdrawalsKobo: 25_000_00 },
+  { date: "2026-09-21", depositsKobo: 110_000_00, withdrawalsKobo: 35_000_00 },
+  { date: "2026-09-22", depositsKobo: 95_000_00, withdrawalsKobo: 70_000_00 },
+  { date: "2026-09-23", depositsKobo: 130_000_00, withdrawalsKobo: 40_000_00 },
+  { date: "2026-09-24", depositsKobo: 85_000_00, withdrawalsKobo: 55_000_00 },
+  { date: "2026-09-25", depositsKobo: 160_000_00, withdrawalsKobo: 30_000_00 },
+  { date: "2026-09-26", depositsKobo: 100_000_00, withdrawalsKobo: 20_000_00 },
+];
+
+export function getMockDailyFlow(): DailyFlow[] {
+  return MOCK_DAILY_FLOW;
+}
+
+export interface VolumeByType {
+  type: LedgerEntry["type"];
+  totalKobo: number;
+}
+
+// Real aggregation of the actual ledger rows above (not a separate sample) —
+// ranking transaction types by total volume moved, highest first.
+export function getMockVolumeByType(): VolumeByType[] {
+  const totals = new Map<LedgerEntry["type"], number>();
+  for (const entry of getAllMockLedgerEntries()) {
+    totals.set(entry.type, (totals.get(entry.type) ?? 0) + Math.abs(entry.amount));
+  }
+  return Array.from(totals.entries())
+    .map(([type, totalKobo]) => ({ type, totalKobo }))
+    .sort((a, b) => b.totalKobo - a.totalKobo);
+}
+
+// ---- Identity Verification queue ----
+
+export interface IdentityQueueItem {
+  customer: AdminUserProfile;
+  latest: IdentityAuditEntry;
+}
+
+// Anyone not already VERIFIED, paired with their most recent attempt — this
+// is exactly Overview's "Needs attention" set, viewed as its own full queue
+// instead of a 3-row teaser.
+export function getMockIdentityQueue(): IdentityQueueItem[] {
+  return MOCK_CUSTOMERS.filter((c) => c.identityStatus !== "VERIFIED")
+    .map((customer) => {
+      const entries = getMockIdentityAudit(customer.id);
+      const latest = entries[entries.length - 1];
+      return latest ? { customer, latest } : null;
+    })
+    .filter((item): item is IdentityQueueItem => item !== null)
+    .sort((a, b) => new Date(b.latest.createdAt).getTime() - new Date(a.latest.createdAt).getTime());
+}
+
+// Demo-only: there's no backend endpoint yet to resolve a flagged identity
+// check by hand, so this only ever mutates the in-memory mock — same
+// append-only pattern as pushMockStatusEvent, just on the identity trail.
+export function resolveMockIdentity(
+  customerId: string,
+  outcome: "SUCCESS" | "CROSS_CHECK_FAILED",
+  detail: string,
+): void {
+  const customer = MOCK_CUSTOMERS.find((c) => c.id === customerId);
+  if (!customer) return;
+  customer.identityStatus = outcome === "SUCCESS" ? "VERIFIED" : "FAILED";
+  if (outcome === "SUCCESS" && !customer.identityMethod) customer.identityMethod = "BVN";
+
+  const list = MOCK_IDENTITY_AUDIT[customerId] ?? (MOCK_IDENTITY_AUDIT[customerId] = []);
+  list.push({
+    id: `i-${Date.now()}`,
+    action: "INITIAL_VERIFY",
+    outcome,
+    previousMethod: null,
+    newMethod: outcome === "SUCCESS" ? "BVN" : null,
+    submitted: "Manual review",
+    detail,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+// ---- Risk & Compliance ----
+
+export interface FlaggedTransaction {
+  id: string;
+  customerId: string;
+  reason: string;
+  amountKobo: number;
+  severity: "medium" | "high";
+  createdAt: string;
+}
+
+// Deliberately mirrors the exact pass-through/layering pattern the app's own
+// AML-DISCUSSION.md worries about — money in, briefly held, straight back
+// out — so this reads as a real risk case, not a random example.
+export const MOCK_FLAGGED_TRANSACTIONS: FlaggedTransaction[] = [
+  {
+    id: "f-1",
+    customerId: "d1a1c2b0-0005-4a11-9d11-000000000005",
+    reason: "Deposit is 4x this customer's usual amount",
+    amountKobo: 700_000_00,
+    severity: "medium",
+    createdAt: "2026-07-22T09:00:00.000Z",
+  },
+  {
+    id: "f-2",
+    customerId: "d1a1c2b0-0006-4a11-9d11-000000000006",
+    reason: "Large deposit moved straight back out within 2 minutes",
+    amountKobo: 160_000_00,
+    severity: "high",
+    createdAt: "2026-09-02T08:01:00.000Z",
+  },
+  {
+    id: "f-3",
+    customerId: "d1a1c2b0-0003-4a11-9d11-000000000003",
+    reason: "Transfer sent minutes after account was auto-restricted",
+    amountKobo: 5_000_00,
+    severity: "high",
+    createdAt: "2026-05-01T17:40:00.000Z",
+  },
+];
+
+export function getMockFlaggedTransactions(): FlaggedTransaction[] {
+  return [...MOCK_FLAGGED_TRANSACTIONS].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+}
+
+export function clearMockFlag(id: string): void {
+  const index = MOCK_FLAGGED_TRANSACTIONS.findIndex((f) => f.id === id);
+  if (index !== -1) MOCK_FLAGGED_TRANSACTIONS.splice(index, 1);
+}
+
+// In-memory only — there's no limits endpoint on the backend yet either.
+export const MOCK_LIMITS = {
+  dailyTransferLimitKobo: 500_000_00,
+};
