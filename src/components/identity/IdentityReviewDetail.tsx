@@ -77,7 +77,7 @@ export default function IdentityReviewDetail({
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Reason (required — this is a demo-only action, no backend endpoint exists for it yet)"
+            placeholder="Reason (required, saved to the audit log)"
             rows={2}
             className="w-full resize-none rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-light focus:border-primary focus:outline-none"
           />

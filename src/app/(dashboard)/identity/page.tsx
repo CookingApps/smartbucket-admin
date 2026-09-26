@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
-import PreviewNote from "@/components/ui/PreviewNote";
 import StatCard from "@/components/ui/StatCard";
 import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
@@ -37,12 +36,6 @@ export default function IdentityPage() {
         title="Identity Verification"
         subtitle="The review queue for identity checks the system couldn't approve automatically."
       />
-
-      <PreviewNote>
-        Running on sample reviews for today&rsquo;s demo — approving or rejecting here only
-        updates the in-memory sample data, since there&rsquo;s no backend endpoint yet for an
-        admin to resolve a flagged identity check by hand.
-      </PreviewNote>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <StatCard
