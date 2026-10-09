@@ -10,7 +10,7 @@ export default function Sidebar() {
   const { logout } = useAuth();
 
   return (
-    <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-border bg-surface lg:flex">
+    <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-border bg-surface lg:sticky lg:top-0 lg:flex lg:h-screen">
       <div className="flex items-center gap-3 px-6 py-6">
         <Image src="/logo.png" alt="SmartBucket" width={32} height={32} className="rounded-lg" />
         <span className="text-sm font-semibold tracking-tight text-text">SmartBucket Admin</span>
