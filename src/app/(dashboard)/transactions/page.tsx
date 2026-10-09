@@ -6,7 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
 import Sheet from "@/components/ui/Sheet";
-import VolumeByTypeChart from "@/components/charts/VolumeByTypeChart";
+import RankedBarChart from "@/components/charts/RankedBarChart";
 import CustomerDetail from "@/components/customers/CustomerDetail";
 import { LEDGER_TYPE_LABEL } from "@/lib/ledgerLabels";
 import { formatNaira, formatDateTime } from "@/lib/format";
@@ -26,7 +26,10 @@ export default function TransactionsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const entries = useMemo(() => getAllMockLedgerEntries(), []);
-  const volumeByType = useMemo(() => getMockVolumeByType(), []);
+  const volumeByType = useMemo(
+    () => getMockVolumeByType().map((v) => ({ label: LEDGER_TYPE_LABEL[v.type], valueKobo: v.totalKobo })),
+    [],
+  );
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -51,7 +54,7 @@ export default function TransactionsPage() {
 
       <Card className="p-5">
         <h2 className="mb-4 text-sm font-medium text-text">Volume by transaction type</h2>
-        <VolumeByTypeChart data={volumeByType} />
+        <RankedBarChart data={volumeByType} emptyLabel="No transactions yet" />
       </Card>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">

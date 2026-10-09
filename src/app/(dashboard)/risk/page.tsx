@@ -16,6 +16,7 @@ import {
   getMockFlaggedTransactions,
   getAllMockLedgerEntries,
   clearMockFlag,
+  setMockDailyLimit,
 } from "@/lib/mockData";
 
 export default function RiskPage() {
@@ -29,7 +30,7 @@ export default function RiskPage() {
   const saveLimit = () => {
     const naira = Number(limitInput.replace(/,/g, ""));
     if (!Number.isFinite(naira) || naira <= 0) return;
-    MOCK_LIMITS.dailyTransferLimitKobo = Math.round(naira * 100);
+    setMockDailyLimit(Math.round(naira * 100));
     setSavedLimit(MOCK_LIMITS.dailyTransferLimitKobo);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

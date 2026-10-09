@@ -246,6 +246,7 @@ export function setMockCustomerStatus(id: string, status: AdminUserProfile["stat
   const fromStatus = customer.status;
   customer.status = status;
   pushMockStatusEvent(id, fromStatus, status, reason);
+  pushAuditLog("you (demo)", "Changed account status", `${customer.firstName} ${customer.lastName} — ${fromStatus} → ${status}`);
 }
 
 // ---- Transactions (all customers) ----
@@ -359,6 +360,11 @@ export function resolveMockIdentity(
     detail,
     createdAt: new Date().toISOString(),
   });
+  pushAuditLog(
+    "you (demo)",
+    "Resolved identity review",
+    `${customer.firstName} ${customer.lastName} — ${outcome === "SUCCESS" ? "marked verified" : "rejected"}`,
+  );
 }
 
 // ---- Risk & Compliance ----
@@ -409,11 +415,200 @@ export function getMockFlaggedTransactions(): FlaggedTransaction[] {
 }
 
 export function clearMockFlag(id: string): void {
+  const flag = MOCK_FLAGGED_TRANSACTIONS.find((f) => f.id === id);
   const index = MOCK_FLAGGED_TRANSACTIONS.findIndex((f) => f.id === id);
   if (index !== -1) MOCK_FLAGGED_TRANSACTIONS.splice(index, 1);
+  if (flag) {
+    const customer = getMockCustomer(flag.customerId);
+    pushAuditLog("you (demo)", "Dismissed flagged transaction", customer ? `${customer.firstName} ${customer.lastName} — ${flag.reason}` : flag.reason);
+  }
 }
 
 // In-memory only — there's no limits endpoint on the backend yet either.
 export const MOCK_LIMITS = {
   dailyTransferLimitKobo: 500_000_00,
 };
+
+export function setMockDailyLimit(kobo: number): void {
+  MOCK_LIMITS.dailyTransferLimitKobo = kobo;
+  pushAuditLog("you (demo)", "Changed daily transfer limit", `${(kobo / 100).toLocaleString()} naira per day`);
+}
+
+// ---- Shared audit log (Team & Permissions) ----
+// Fed by actions taken elsewhere in the demo — restricting a customer,
+// resolving an identity review, dismissing a flag — plus a few seeded
+// historical entries, so the log reads as one real system instead of a
+// page-local list. Mirrors the real AdminAuditLog's intent (every admin
+// action leaves a trace) even though the backend never exposes a GET for it.
+export interface AuditLogEntry {
+  id: string;
+  actor: string;
+  action: string;
+  detail: string;
+  createdAt: string;
+}
+
+export const MOCK_AUDIT_LOG: AuditLogEntry[] = [
+  { id: "a-1", actor: "compliance@smartbucket.co", action: "Resolved identity review", detail: "Fatima Sule — duplicate BVN, account suspended", createdAt: "2026-09-17T12:00:00.000Z" },
+  { id: "a-2", actor: "system", action: "Auto-restricted account", detail: "Tunde Bakare — 3 failed BVN attempts", createdAt: "2026-09-18T07:15:00.000Z" },
+  { id: "a-3", actor: "support@smartbucket.co", action: "Viewed customer profile", detail: "Amaka Eze", createdAt: "2026-09-20T10:05:00.000Z" },
+];
+
+export function getMockAuditLog(): AuditLogEntry[] {
+  return [...MOCK_AUDIT_LOG].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function pushAuditLog(actor: string, action: string, detail: string): void {
+  MOCK_AUDIT_LOG.push({ id: `a-${Date.now()}`, actor, action, detail, createdAt: new Date().toISOString() });
+}
+
+// ---- Team & Permissions ----
+
+export type TeamRole = "Owner" | "Compliance Officer" | "Support Agent";
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: TeamRole;
+  addedAt: string;
+}
+
+// What each role can actually reach — this is the real content of "set what
+// each role can see/do", shown as a read-only matrix since there's no
+// backend permission system yet for it to enforce live.
+export const ROLE_ACCESS: Record<TeamRole, string[]> = {
+  Owner: [
+    "Overview",
+    "Customers",
+    "Identity Verification",
+    "Transactions",
+    "Risk & Compliance",
+    "Insights",
+    "Team & Permissions",
+    "Messages & Settings",
+  ],
+  "Compliance Officer": ["Overview", "Identity Verification", "Transactions", "Risk & Compliance"],
+  "Support Agent": ["Overview", "Customers"],
+};
+
+export const MOCK_TEAM: TeamMember[] = [
+  { id: "t-1", name: "You", email: "you@smartbucket.co", role: "Owner", addedAt: "2026-06-01T09:00:00.000Z" },
+  { id: "t-2", name: "Ifeoma Chukwu", email: "ifeoma.chukwu@smartbucket.co", role: "Compliance Officer", addedAt: "2026-07-10T09:00:00.000Z" },
+  { id: "t-3", name: "Segun Adeyemi", email: "segun.adeyemi@smartbucket.co", role: "Support Agent", addedAt: "2026-08-05T09:00:00.000Z" },
+];
+
+export function getMockTeam(): TeamMember[] {
+  return [...MOCK_TEAM].sort((a, b) => new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime());
+}
+
+export function addMockTeamMember(name: string, email: string, role: TeamRole): void {
+  MOCK_TEAM.push({ id: `t-${Date.now()}`, name, email, role, addedAt: new Date().toISOString() });
+  pushAuditLog("you (demo)", "Added team member", `${name} (${email}) as ${role}`);
+}
+
+export function removeMockTeamMember(id: string): void {
+  const member = MOCK_TEAM.find((m) => m.id === id);
+  const index = MOCK_TEAM.findIndex((m) => m.id === id);
+  if (index !== -1) MOCK_TEAM.splice(index, 1);
+  if (member) pushAuditLog("you (demo)", "Removed team member", `${member.name} (${member.email})`);
+}
+
+// ---- Insights ----
+
+// Real aggregation of the actual mock buckets above — grouped by bucket
+// name, counted by how many customers have one, summed for total money in
+// each. Not a separate invented dataset.
+export interface BucketPopularity {
+  name: string;
+  emoji: string;
+  customerCount: number;
+  totalKobo: number;
+}
+
+export function getMockBucketPopularity(): BucketPopularity[] {
+  const byName = new Map<string, BucketPopularity>();
+  for (const buckets of Object.values(MOCK_BUCKETS)) {
+    for (const b of buckets) {
+      const existing = byName.get(b.name);
+      if (existing) {
+        existing.customerCount += 1;
+        existing.totalKobo += b.currentAmountKobo;
+      } else {
+        byName.set(b.name, { name: b.name, emoji: b.emoji, customerCount: 1, totalKobo: b.currentAmountKobo });
+      }
+    }
+  }
+  return Array.from(byName.values()).sort((a, b) => b.customerCount - a.customerCount || b.totalKobo - a.totalKobo);
+}
+
+// Smart Allocation acceptance — separate sample series, same reason as
+// Overview's daily-flow chart: nothing in the mock ledger tracks proposal
+// outcomes, so this illustrates the shape of a real metric rather than
+// deriving one that doesn't exist yet.
+export const MOCK_ALLOCATION_STATS = {
+  shown: 48,
+  approvedAsIs: 29,
+  edited: 11,
+  dismissed: 8,
+};
+
+// ---- Messages & Settings ----
+
+export interface FeatureFlags {
+  smartAllocation: boolean;
+  pendingReminders: boolean;
+}
+
+// Mirrors two real behaviors already in the app (the allocation proposal
+// prompt, and the "your money is still scattered" nudge) — toggles for
+// things that genuinely exist, not invented switches.
+export const MOCK_FEATURE_FLAGS: FeatureFlags = {
+  smartAllocation: true,
+  pendingReminders: true,
+};
+
+export function setMockFeatureFlag(key: keyof FeatureFlags, value: boolean): void {
+  MOCK_FEATURE_FLAGS[key] = value;
+  pushAuditLog("you (demo)", "Toggled feature", `${key} → ${value ? "on" : "off"}`);
+}
+
+export const MOCK_APP_SETTINGS = {
+  earlyBreakPenaltyPercent: 2,
+};
+
+export function setMockEarlyBreakPenalty(percent: number): void {
+  MOCK_APP_SETTINGS.earlyBreakPenaltyPercent = percent;
+  pushAuditLog("you (demo)", "Changed early-break penalty", `${percent}%`);
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  audience: "All customers" | "Verified only" | "Restricted / Suspended";
+  sentAt: string;
+}
+
+export const MOCK_ANNOUNCEMENTS: Announcement[] = [
+  {
+    id: "an-1",
+    title: "New: lock a bucket until payday",
+    body: "You can now lock any bucket until a target date, not just a target amount.",
+    audience: "All customers",
+    sentAt: "2026-09-05T09:00:00.000Z",
+  },
+];
+
+export function getMockAnnouncements(): Announcement[] {
+  return [...MOCK_ANNOUNCEMENTS].sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
+}
+
+export function sendMockAnnouncement(
+  title: string,
+  body: string,
+  audience: Announcement["audience"],
+): void {
+  MOCK_ANNOUNCEMENTS.push({ id: `an-${Date.now()}`, title, body, audience, sentAt: new Date().toISOString() });
+  pushAuditLog("you (demo)", "Sent announcement", `"${title}" to ${audience}`);
+}

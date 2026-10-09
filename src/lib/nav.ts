@@ -27,7 +27,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/identity", label: "Identity Verification", icon: ShieldCheck, dot: "bg-accent-purple" },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight, dot: "bg-accent-teal" },
   { href: "/risk", label: "Risk & Compliance", icon: ShieldAlert, dot: "bg-accent-red" },
-  // { href: "/insights", label: "Insights", icon: BarChart3, dot: "bg-accent-orange" },
-  // { href: "/team", label: "Team & Permissions", icon: UserCog, dot: "bg-accent-pink" },
-  // { href: "/messages", label: "Messages & Settings", icon: Megaphone, dot: "bg-primary-dark" },
+  { href: "/insights", label: "Insights", icon: BarChart3, dot: "bg-accent-orange" },
+  { href: "/team", label: "Team & Permissions", icon: UserCog, dot: "bg-accent-pink" },
+  { href: "/messages", label: "Messages & Settings", icon: Megaphone, dot: "bg-primary-dark" },
 ];
